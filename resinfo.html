@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResInfo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root, [data-theme="dark"] {
+    --bg: #0f0f13;
+    --surface: #18181f;
+    --border: #2a2a35;
+    --text: #f0f0f5;
+    --muted: #7a7a8c;
+    --row-hover: #16161e;
+    --row-border: #1e1e28;
+    --stop-hover-bg: #1e1e2a;
+    --train: #6c63ff;
+    --late: #ff6b6b;
+    --ontime: #00c9a7;
+    --toggle-bg: #2a2a35;
+  }
+
+  [data-theme="light"] {
+    --bg: #f5f5fa;
+    --surface: #ffffff;
+    --border: #dcdce8;
+    --text: #111118;
+    --muted: #8888a0;
+    --row-hover: #f0f0f8;
+    --row-border: #ececf5;
+    --stop-hover-bg: #ececf5;
+    --train: #5a52e0;
+    --late: #e03030;
+    --ontime: #008c72;
+    --toggle-bg: #dcdce8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background 0.2s, color 0.2s;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #6c63ff, #38bdf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .logo-sub {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .theme-toggle {
+    background: var(--toggle-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .theme-toggle:hover { border-color: var(--train); }
+
+  /* ── Search bar — always centered, full width ── */
+  .search-section {
+    padding: 28px 32px 20px;
+    width: 100%;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 13px 18px;
+    color: var(--text);
+    font-size: 16px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .search-input:focus { border-color: var(--train); }
+  .search-input::placeholder { color: var(--muted); }
+
+  .btn {
+    padding: 13px 22px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+  }
+
+  .btn:hover { opacity: 0.85; }
+  .btn:active { transform: scale(0.97); }
+  .btn-dep { background: linear-gradient(135deg, #6c63ff, #8b5cf6); color: #fff; }
+  .btn-arr { background: linear-gradient(135deg, #0ea5e9, #00c9a7); color: #fff; }
+
+  /* ── Stop picker ── */
+  #stop-picker {
+    padding: 14px 32px;
+    border-bottom: 1px solid var(--border);
+    display: none;
+    flex-shrink: 0;
+  }
+
+  .stop-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+  .stop-list  { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .stop-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 14px;
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .stop-btn:hover { border-color: var(--train); background: var(--stop-hover-bg); }
+
+  /* ── Results — full width, fills remaining height ── */
+  #results {
+    flex: 1;
+    width: 100%;
+    padding: 0;
+    overflow-x: auto;
+  }
+
+  .results-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 20px 32px 14px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+  }
+
+  .results-title { font-size: 20px; font-weight: 700; }
+  .results-meta  { font-size: 13px; color: var(--muted); }
+
+  /* ── Table full width ── */
+  .board { width: 100%; border-collapse: collapse; font-size: 15px; }
+
+  .board th {
+    text-align: left;
+    padding: 12px 24px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 61px;
+    background: var(--bg);
+    z-index: 9;
+  }
+
+  .board td {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--row-border);
+    vertical-align: middle;
+  }
+
+  .board tr:hover td { background: var(--row-hover); }
+
+  .time {
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text);
+    white-space: nowrap;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .time-late { color: var(--late); }
+
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  [data-theme="dark"] .badge-Train    { background: #2d2a5e; color: #a09fff; }
+  [data-theme="dark"] .badge-Commuter { background: #2e1f5e; color: #c4b5fd; }
+  [data-theme="dark"] .badge-Metro    { background: #0d3d32; color: #34d399; }
+  [data-theme="dark"] .badge-Tram     { background: #3d3400; color: #fbbf24; }
+  [data-theme="dark"] .badge-Bus      { background: #3d1212; color: #fca5a5; }
+  [data-theme="dark"] .badge-Ferry    { background: #0c2d3d; color: #7dd3fc; }
+  [data-theme="dark"] .badge-Unknown  { background: #1e1e2a; color: #94a3b8; }
+
+  [data-theme="light"] .badge-Train    { background: #e0deff; color: #4c44c0; }
+  [data-theme="light"] .badge-Commuter { background: #ede9ff; color: #6d28d9; }
+  [data-theme="light"] .badge-Metro    { background: #ccfdf0; color: #006b55; }
+  [data-theme="light"] .badge-Tram     { background: #fff5cc; color: #8a6800; }
+  [data-theme="light"] .badge-Bus      { background: #ffe0e0; color: #b91c1c; }
+  [data-theme="light"] .badge-Ferry    { background: #daf4ff; color: #0369a1; }
+  [data-theme="light"] .badge-Unknown  { background: #ececf5; color: #6b6b80; }
+
+  /* ── Stockholm line colors ── */
+  .badge-blue    { background: #003f8a; color: #ffffff; }
+  .badge-red     { background: #c0192e; color: #ffffff; }
+  .badge-green   { background: #197a3a; color: #ffffff; }
+  .badge-purple  { background: #5b2d8e; color: #ffffff; }
+  .badge-orange  { background: #d4610a; color: #ffffff; }
+  .badge-darkred { background: #7a1f1f; color: #ffffff; }
+  .badge-yellow  { background: #f5c000; color: #1a1a00; }
+  .badge-regional { background: #1a3a5c; color: #7dd3fc; }
+  .badge-intercity { background: #5c1a2e; color: #fca5a5; }
+  .badge-line-default { background: var(--surface); color: var(--muted); border: 1px solid var(--border); }
+
+  .line-name { max-width: 200px; }
+
+  .destination {
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .status-ontime { color: var(--ontime); font-size: 13px; font-weight: 500; }
+  .status-late   { color: var(--late);   font-size: 13px; font-weight: 600; }
+
+  /* ── Empty / loading state ── */
+  .state-msg {
+    text-align: center;
+    padding: 80px 0;
+    color: var(--muted);
+    font-size: 16px;
+  }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--train);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 14px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">ResInfo</div>
+    <div class="logo-sub">Sweden Travel Information</div>
+  </div>
+  <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()">
+    <span id="theme-icon">☀️</span>
+    <span id="theme-label">Light mode</span>
+  </button>
+</header>
+
+<div class="search-section">
+  <div class="search-row">
+    <input class="search-input" id="station-input" type="text" placeholder="Station, e.g. Stockholm C or Gothenburg...">
+    <button class="btn btn-dep" onclick="searchStation('dep')">Departures</button>
+    <button class="btn btn-arr" onclick="searchStation('arr')">Arrivals</button>
+  </div>
+</div>
+
+<div id="stop-picker">
+  <div class="stop-label">Multiple stations found — pick one:</div>
+  <div class="stop-list" id="stop-list"></div>
+</div>
+
+<div id="results">
+  <div class="state-msg">Enter a station name above to get started.</div>
+</div>
+
+<script>
+const API_KEY = '5bed8c71-3f70-4e83-a82d-c5d05e7ae21b';
+const BASE    = 'https://api.resrobot.se/v2.1';
+let pendingMode = null;
+
+function toggleTheme() {
+  const html   = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('theme-icon').textContent  = isDark ? '🌙' : '☀️';
+  document.getElementById('theme-label').textContent = isDark ? 'Dark mode' : 'Light mode';
+  localStorage.setItem('resinfo-theme', isDark ? 'light' : 'dark');
+}
+
+(function() {
+  const saved = localStorage.getItem('resinfo-theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+    if (saved === 'light') {
+      document.getElementById('theme-icon').textContent  = '🌙';
+      document.getElementById('theme-label').textContent = 'Dark mode';
+    }
+  }
+})();
+
+function lineColor(name) {
+  const n = (name || "").toLowerCase();
+  const numMatch = n.match(/\s(\d+[a-z]?)\s*$/);
+  const num = numMatch ? numMatch[1].toUpperCase() : "";
+  const isTunnelbana = n.includes("tunnelbana");
+  const isTram = n.includes("rväg") || n.includes("rvagn") || n.includes("tram");
+  const isArlanda = n.includes("arlanda") || (n.includes("flygtransfer") && n.includes("tåg")) || (n.includes("airport") && n.includes("train"));
+  const isInterCity = n.includes("intercity");
+  const isPendel = !isTunnelbana && !isArlanda && (n.includes("tåg 4") || n.includes("tåg 3"));
+  const isRegional = n.includes("regional");
+  if (isArlanda) return "yellow";
+  if (isRegional) return "regional";
+  if (isInterCity) return "intercity";
+  if (isTunnelbana) {
+    if (num === "10" || num === "11") return "blue";
+    if (num === "13" || num === "14") return "red";
+    if (num === "17" || num === "18" || num === "19") return "green";
+  }
+  if (isPendel) return "purple";
+  if (isTram) {
+    if (num === "21" || num === "22") return "orange";
+    if (num === "12" || num === "25" || num === "26" || num === "29") return "green";
+    if (num === "7") return "darkred";
+  }
+  return null;
+}
+
+function transportType(entry) {
+  const entryName = (entry.name || "").toLowerCase();
+  if (entryName.includes("regional tåg") || entryName.includes("regional train")) return "Train";
+  if (entryName.includes("snabbtåg") || entryName.includes("high speed")) return "Train";
+  if (entryName.includes("intercity")) return "Train";
+  if ((entryName.includes("flygtransfer") || entryName.includes("airport transfer")) && !entryName.includes("train") && !entryName.includes("tåg")) return "Bus";
+  if (entryName.includes("buss") || entryName.includes("bus 9") || entryName.includes("bus 8") || entryName.includes("bus 7") || entryName.includes("bus 6") || entryName.includes("bus 5") || entryName.includes("bus 4") || entryName.includes("bus 3") || entryName.includes("bus 2") || entryName.includes("bus 1")) return "Bus";
+  let product = entry.ProductAtStop || entry.Product;
+  if (!product) return "Unknown";
+  if (Array.isArray(product)) product = product[0];
+  const cls  = String(product.cls || "");
+  const name = (product.name || "").toLowerCase();
+  if (["1","2"].includes(cls) || name.includes("tåg") || name.includes("sj") || name.includes("train") || name.includes("x2000")) return "Train";
+  if (cls === "4"  || name.includes("pendel") || name.includes("commuter")) return "Commuter";
+  if (cls === "8"  || name.includes("spårvagn") || name.includes("tram"))   return "Tram";
+  if (cls === "16" || name.includes("tunnelbana") || name.includes("metro")) return "Metro";
+  if (cls === "32" || name.includes("buss") || name.includes("bus"))         return "Bus";
+  if (cls === "64" || name.includes("färja") || name.includes("ferry"))      return "Ferry";
+  if (entryName.includes("tåg") || entryName.includes("train")) return "Train";
+  if (entryName.includes("buss") || entryName.includes("bus")) return "Bus";
+  if (entryName.includes("tunnelbana") || entryName.includes("metro")) return "Metro";
+  if (entryName.includes("spårvagn") || entryName.includes("tram")) return "Tram";
+  if (entryName.includes("pendel")) return "Commuter";
+  if (entryName.includes("färja") || entryName.includes("ferry")) return "Ferry";
+  return product.catOut ? product.catOut.trim() : "Unknown";
+}
+
+async function searchStation(mode) {
+  const input = document.getElementById('station-input').value.trim();
+  if (!input) return;
+  pendingMode = mode;
+  document.getElementById('stop-picker').style.display = 'none';
+  document.getElementById('results').innerHTML = loadingHTML();
+  try {
+    const url  = `${BASE}/location.name?input=${encodeURIComponent(input)}&format=json&accessId=${API_KEY}`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const items = (data.stopLocationOrCoordLocation || []).map(i => i.StopLocation).filter(Boolean).slice(0, 6);
+    if (!items.length) { document.getElementById('results').innerHTML = emptyHTML('No stations found. Try a different name.'); return; }
+    if (items.length === 1) { fetchBoard(items[0], mode); return; }
+    document.getElementById('results').innerHTML = '';
+    showPicker(items);
+  } catch(e) {
+    document.getElementById('results').innerHTML = emptyHTML('Something went wrong. Check your connection.');
+  }
+}
+
+function showPicker(stops) {
+  const picker = document.getElementById('stop-picker');
+  const list   = document.getElementById('stop-list');
+  list.innerHTML = '';
+  stops.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className   = 'stop-btn';
+    btn.textContent = s.name;
+    btn.onclick = () => { picker.style.display = 'none'; fetchBoard(s, pendingMode); };
+    list.appendChild(btn);
+  });
+  picker.style.display = 'block';
+}
+
+async function fetchBoard(stop, mode) {
+  document.getElementById('results').innerHTML = loadingHTML();
+  const endpoint = mode === 'dep' ? 'departureBoard' : 'arrivalBoard';
+  const url = `${BASE}/${endpoint}?id=${stop.extId}&format=json&accessId=${API_KEY}&maxJourneys=25`;
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+    const key  = mode === 'dep' ? 'Departure' : 'Arrival';
+    const rows = data[key] || [];
+    const label = mode === 'dep' ? 'Departures from' : 'Arrivals to';
+    renderBoard(rows, `${label} ${stop.name}`, mode);
+  } catch(e) {
+    document.getElementById('results').innerHTML = emptyHTML('Could not fetch data. Please try again.');
+  }
+}
+
+function renderBoard(rows, title, mode) {
+  if (!rows.length) { document.getElementById('results').innerHTML = emptyHTML('No results found right now.'); return; }
+  const colLabel = mode === 'dep' ? 'Destination' : 'From';
+  const trs = rows.map(r => {
+    const time   = (r.time || '').slice(0,5);
+    const rt     = (r.rtTime || '').slice(0,5);
+    const isLate = rt && rt !== time;
+    const timeHTML = isLate
+      ? `<span class="time">${time}</span> <span class="time time-late">${rt}</span>`
+      : `<span class="time">${time}</span>`;
+    const typ  = transportType(r);
+    const line = (r.name || '').trim()
+      .replace(/Länstrafik\s*-?\s*Tunnelbana/gi, 'Metro')
+      .replace(/Länstrafik\s*-?\s*Spårväg/gi, 'Tram')
+      .replace(/Länstrafik\s*-?\s*Spårvagn/gi, 'Tram')
+      .replace(/Länstrafik\s*-?\s*Pendeltåg/gi, 'Commuter Rail')
+      .replace(/Länstrafik\s*-?\s*Expressbuss/gi, 'Express Bus')
+      .replace(/Länstrafik\s*-?\s*Nattbuss/gi, 'Night Bus')
+      .replace(/Länstrafik\s*-?\s*Stadsbuss/gi, 'City Bus')
+      .replace(/Länstrafik\s*-?\s*Buss/gi, 'Bus')
+      .replace(/Länstrafik\s*-?\s*Tåg/gi, 'Commuter Train')
+      .replace(/Flygtransfer\s*-?\s*Buss/gi, 'Airport Transfer Bus')
+      .replace(/Flygtransfer\s*-?\s*[Tt]åg/gi, 'Airport Express')
+      .replace(/Regional\s*Tåg/gi, 'Regional Train')
+      .replace(/Regionaltåg/gi, 'Regional Train')
+      .replace(/Snabbtåg/gi, 'High Speed')
+      .replace(/InterCity/gi, 'InterCity')
+      .replace(/Expressbuss/gi, 'Express Bus')
+      .replace(/-([^\s])/g, '- $1')
+      .trim();
+    const dest = mode === 'dep' ? (r.direction || '') : (r.origin || '');
+    const statusHTML = isLate
+      ? `<span class="status-late">Delayed → ${rt}</span>`
+      : `<span class="status-ontime">On time</span>`;
+    return `<tr>
+      <td>${timeHTML}</td>
+      <td><span class="badge badge-${typ}">${typ}</span></td>
+      <td class="line-name"><span class="badge badge-${lineColor(r.name) || "line-default"}">${line}</span></td>
+      <td class="destination">${dest}</td>
+      <td>${statusHTML}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('results').innerHTML = `
+    <div class="results-header">
+      <span class="results-title">${title}</span>
+      <span class="results-meta">${rows.length} results</span>
+    </div>
+    <table class="board">
+      <thead><tr><th>Time</th><th>Type</th><th>Line</th><th>${colLabel}</th><th>Status</th></tr></thead>
+      <tbody>${trs}</tbody>
+    </table>`;
+}
+
+function loadingHTML() { return `<div class="state-msg"><div class="spinner"></div>Fetching data...</div>`; }
+function emptyHTML(msg) { return `<div class="state-msg">${msg}</div>`; }
+
+document.getElementById('station-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchStation('dep');
+});
+</script>
+</body>
+</html>
