@@ -353,35 +353,41 @@ function toggleTheme() {
   }
 })();
 
-function lineColor(name) {
+function lineColor(name, typ) {
   const n = (name || "").toLowerCase();
   const numMatch = n.match(/\s(\d+[a-z]?)\s*$/);
   const num = numMatch ? numMatch[1].toUpperCase() : "";
   const isTunnelbana = n.includes("tunnelbana");
-  const isTram = n.includes("rväg") || n.includes("rvagn") || n.includes("tram");
-  const isArlanda = n.includes("arlanda") || (n.includes("flygtransfer") && n.includes("tåg")) || (n.includes("airport") && n.includes("train"));
   const isInterCity = n.includes("intercity");
-  const isPendel = !isTunnelbana && !isArlanda && (n.includes("tåg 4") || n.includes("tåg 3"));
   const isRegional = n.includes("regional");
-  if (isArlanda) return "yellow";
-  if (isRegional) return "regional";
-  if (isInterCity) return "intercity";
+  const isArlanda = n.includes("arlanda") || (n.includes("flygtransfer") && /tåg\s*7\d{3}/.test(n));
+  // Stockholm Tunnelbana — specific numbers only
   if (isTunnelbana) {
     if (num === "10" || num === "11") return "blue";
     if (num === "13" || num === "14") return "red";
     if (num === "17" || num === "18" || num === "19") return "green";
+    return null;
   }
-  if (isPendel) return "purple";
-  if (isTram) {
+  // Stockholm commuter rail — Länstrafik Tåg with specific numbers only
+  if (n.includes("länstrafik") && n.includes("tåg") && !isRegional && !isInterCity && !isArlanda) {
+    if (["35","36","37","38","39","40","41","43"].includes(num)) return "purple";
+    return null;
+  }
+  // Stockholm trams — only when type is Tram (not Ferry), Länstrafik, known numbers
+  if ((n.includes("spårväg") || n.includes("spårvagn")) && typ === "Tram" && n.includes("länstrafik")) {
     if (num === "21" || num === "22") return "orange";
-    if (num === "12" || num === "25" || num === "26" || num === "29") return "green";
-    if (num === "7") return "darkred";
+    if (num === "25" || num === "26" || num === "29") return "green";
+    return null;
   }
+  if (isArlanda) return "yellow";
+  if (isRegional) return "regional";
+  if (isInterCity) return "intercity";
   return null;
 }
 
 function transportType(entry) {
   const entryName = (entry.name || "").toLowerCase();
+  if (entryName.includes("spårväg") || entryName.includes("spårvagn")) return "Tram";
   if (entryName.includes("regional tåg") || entryName.includes("regional train")) return "Train";
   if (entryName.includes("snabbtåg") || entryName.includes("high speed")) return "Train";
   if (entryName.includes("intercity")) return "Train";
@@ -494,7 +500,7 @@ function renderBoard(rows, title, mode) {
     return `<tr>
       <td>${timeHTML}</td>
       <td><span class="badge badge-${typ}">${typ}</span></td>
-      <td class="line-name"><span class="badge badge-${lineColor(r.name) || "line-default"}">${line}</span></td>
+      <td class="line-name"><span class="badge badge-${lineColor(r.name, typ) || "line-default"}">${line}</span></td>
       <td class="destination">${dest}</td>
       <td>${statusHTML}</td>
     </tr>`;
