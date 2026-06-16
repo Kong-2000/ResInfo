@@ -132,12 +132,4 @@ Endpoints used:
 - `departureBoard` — Get departures from a stop
 - `arrivalBoard` — Get arrivals to a stop
 
----
 
-## Files
-
-| File | Description |
-|------|-------------|
-| `resinfo.py` | Python terminal app |
-| `resinfo.html` | Web app |
-| `README.md` | This file |
