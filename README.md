@@ -93,6 +93,9 @@ Features added:
 **Problem:** Line colors only worked for Metro, not for trams or commuter trains.
 **Solution:** Used the browser console to log raw API names and discovered the exact format (e.g. `Länstrafik - Spårväg 7` not `Spårvagn`). Updated matching logic accordingly.
 
+**Problem:** The API key was hardcoded directly in the source code and got pushed to a public GitHub repository, exposing it to anyone.
+**Solution:** Removed the key from the code entirely. The web app now loads it from a local `config.js` file excluded via `.gitignore`. The Python app reads it from an environment variable instead. The old exposed key was revoked and replaced with a new one.
+
 ---
 
 ## Conclusion
@@ -114,13 +117,39 @@ What could be improved:
 
 ## How to Run
 
+**API Key Setup (required for both versions)**
+
+This project uses a free ResRobot API key. Get yours at [trafiklab.se](https://www.trafiklab.se).
+
 **Terminal app:**
+
+Set an environment variable with your key.
+
+Windows:
+```
+setx RESROBOT_API_KEY "your-key-here"
+```
+
+Mac/Linux:
+```
+export RESROBOT_API_KEY="your-key-here"
+```
+
+Then run:
 ```
 python resinfo.py
 ```
 
 **Web app:**
-Open `resinfo.html` with VS Code Live Server or any local web server.
+
+Copy `config.example.js` to `config.js` and add your key:
+```js
+const API_KEY = "your-key-here";
+```
+
+Then open `resinfo.html` with VS Code Live Server or any local web server.
+
+`config.js` is excluded from version control via `.gitignore` to keep your key private.
 
 ---
 
