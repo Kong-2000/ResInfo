@@ -34,6 +34,7 @@ The original Swedavia app was studied by looking at screenshots and video record
 - Python 3 for the terminal app
 - HTML, CSS, and JavaScript for the web app
 - ResRobot API v2.1 from Trafiklab for live transport data
+- Claude Sonnet 4.6 for code generation and debugging
 
 ---
 
