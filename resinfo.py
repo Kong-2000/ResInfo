@@ -2,7 +2,16 @@ import urllib.request
 import urllib.parse
 import json
 
-API_KEY = "5bed8c71-3f70-4e83-a82d-c5d05e7ae21b"
+import os
+
+API_KEY = os.environ.get("RESROBOT_API_KEY")
+if not API_KEY:
+    print("Missing API key.")
+    print("Set it with: setx RESROBOT_API_KEY \"your-key-here\"  (Windows)")
+    print("        or: export RESROBOT_API_KEY=\"your-key-here\"  (Mac/Linux)")
+    print("Get a free key at https://www.trafiklab.se")
+    exit(1)
+
 BASE_URL = "https://api.resrobot.se/v2.1"
 
 def _get(url):

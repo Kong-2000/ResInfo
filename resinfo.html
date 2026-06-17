@@ -358,8 +358,13 @@
   <div class="state-msg">Enter a station name above to get started.</div>
 </div>
 
+<script src="config.js"></script>
 <script>
-const API_KEY = '5bed8c71-3f70-4e83-a82d-c5d05e7ae21b';
+// API_KEY is loaded from config.js (not committed to GitHub)
+if (typeof API_KEY === 'undefined') {
+  document.body.innerHTML = '<div style="padding:60px;text-align:center;font-family:sans-serif;color:#999"><h2>Missing config.js</h2><p>Create a file named <code>config.js</code> in this folder with:</p><pre style="background:#222;color:#0f0;padding:16px;display:inline-block;border-radius:8px">const API_KEY = "YOUR_RESROBOT_API_KEY";</pre><p>Get a free key at <a href="https://www.trafiklab.se" target="_blank">trafiklab.se</a></p></div>';
+  throw new Error('config.js not found');
+}
 const BASE    = 'https://api.resrobot.se/v2.1';
 let pendingMode = null;
 
